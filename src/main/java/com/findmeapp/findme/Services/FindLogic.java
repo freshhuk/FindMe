@@ -14,8 +14,14 @@ public class FindLogic {
 
     public int getSilhouette(MultipartFile image){
         try {
+            System.out.println("Image was got " + image.getOriginalFilename());
+
+
             // Read image
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+
+            System.out.println(" image width " +  bufferedImage.getWidth()
+                    + " Height " + bufferedImage.getHeight());
 
             //Logic save in db or check it
 
@@ -32,6 +38,10 @@ public class FindLogic {
     }
 
     private int findSilhouette(BufferedImage image){
+        int countSilhouette = 0;
+
+
+
         return 0;
     }
     private void getUploadedImage(){
