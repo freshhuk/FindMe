@@ -39,7 +39,8 @@ public class FindLogic {
 
     private int findSilhouette(BufferedImage image){
         int countSilhouette = 0;
-
+        //Как вариант решение проходить по массиву пиксилей сверху в низ а потом слева в право, и просматривать
+        //Обьекты которые заканчиваются по границе и заканчиватся
 
 
         return 0;
