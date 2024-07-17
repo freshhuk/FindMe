@@ -22,7 +22,8 @@ public class FindLogic {
 
             System.out.println(" image width " +  bufferedImage.getWidth()
                     + " Height " + bufferedImage.getHeight());
-
+            System.out.println("RGB - " + bufferedImage.getRGB(1, 3)
+            + " getTileHeight " + bufferedImage.getTileHeight());
             //Logic save in db or check it
 
 
