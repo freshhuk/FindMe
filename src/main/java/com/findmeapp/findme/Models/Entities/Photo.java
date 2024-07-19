@@ -1,6 +1,9 @@
 package com.findmeapp.findme.Models.Entities;
 
 
+import lombok.Data;
+
+@Data
 public class Photo {
 
     private String fileName;

@@ -1,5 +1,6 @@
 package com.findmeapp.findme.Controllers;
 
+import com.findmeapp.findme.Models.Entities.Photo;
 import com.findmeapp.findme.Services.FindLogic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +25,17 @@ public class APIController {
     public ResponseEntity<String> getSilhouette(MultipartFile image){
 
         // Data for save db
-        System.out.println("Size image " + image.getSize()
-                + " OriginalFile name " + image.getOriginalFilename()
-                + " Content type" + image.getContentType());
+        Photo photo = new Photo();{
+            photo.setFileName(image.getOriginalFilename());
+            photo.setSize(image.getSize());
+            photo.setFormat(image.getContentType());
+            photo.setCountSilhouette(0);
+        }
 
-        int count = findSilhouetteService.getSilhouette(image);
+        System.out.println("Size image " + image.getSize() + " OriginalFile name " + image.getOriginalFilename() + " Content type" + image.getContentType());
+
+        int count = findSilhouetteService.getSilhouette(image, photo);
+
         return ResponseEntity.ok().body("Cont - " + count);
     }
 
