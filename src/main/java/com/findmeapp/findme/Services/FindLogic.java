@@ -35,6 +35,15 @@ public class FindLogic {
             //Get count of silhouette
             int countSilhouette = findSilhouette(pixelsImage);
 
+
+            //Debug
+            for(int y = 0; y < pixelsImage.length; y++){
+                for(int x = 0; x < pixelsImage.length; x++) {
+                    System.out.print(pixelsImage[x][y] + " ");
+                }
+                System.out.println(" ");
+            }
+
             return countSilhouette;
 
         } catch (IOException ex) {
