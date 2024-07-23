@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 
+import java.awt.image.Raster;
 import java.io.IOException;
 
 
@@ -24,10 +25,11 @@ public class FindLogic {
             //Array with rgb pixels of image
             int[][] pixelsImage = getPixelArray(bufferedImage);
 
-            System.out.println(" image width " +  bufferedImage.getWidth()
-                    + " Height " + bufferedImage.getHeight());
-            System.out.println("RGB - " + bufferedImage.getRGB(3, 4)
-            + " getTileHeight " + bufferedImage.getTileHeight());
+            //Raster raster = bufferedImage.getRaster();
+
+
+
+
 
             //Logic save in db or check it
             getUploadedImage(photo);
@@ -37,9 +39,17 @@ public class FindLogic {
 
 
             //Debug
+
+            System.out.println(" image width " +  bufferedImage.getWidth()
+                    + " Height " + bufferedImage.getHeight());
+            System.out.println("RGB - " + bufferedImage.getRGB(3, 4)
+                    + " getTileHeight " + bufferedImage.getTileHeight());
+
+
+
             for(int y = 0; y < pixelsImage.length; y++){
-                for(int x = 0; x < pixelsImage.length; x++) {
-                    System.out.print(pixelsImage[x][y] + " ");
+                for(int x = 0; x < pixelsImage[y].length; x++) {
+                    System.out.print(pixelsImage[y][x] + " ");
                 }
                 System.out.println(" ");
             }
