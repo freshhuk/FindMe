@@ -7,7 +7,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 
-import java.awt.image.Raster;
 import java.io.IOException;
 
 
@@ -16,20 +15,12 @@ public class FindLogic {
 
     public int getSilhouette(MultipartFile image, Photo photo){
         try {
-            System.out.println("Image was got " + image.getOriginalFilename());
-
 
             // Read image
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
 
             //Array with rgb pixels of image
             int[][] pixelsImage = getPixelArray(bufferedImage);
-
-            //Raster raster = bufferedImage.getRaster();
-
-
-
-
 
             //Logic save in db or check it
             getUploadedImage(photo);
@@ -39,20 +30,23 @@ public class FindLogic {
 
 
             //Debug
+            System.out.println("Image was got " + image.getOriginalFilename());
 
             System.out.println(" image width " +  bufferedImage.getWidth()
                     + " Height " + bufferedImage.getHeight());
             System.out.println("RGB - " + bufferedImage.getRGB(3, 4)
                     + " getTileHeight " + bufferedImage.getTileHeight());
 
+            int[] test = getRGB(pixelsImage[1][1]);
 
+            System.out.println("Red " + test[0] + " Green " + test[1] + " Blue " + test[2]);
 
-            for(int y = 0; y < pixelsImage.length; y++){
+            /*for(int y = 0; y < pixelsImage.length; y++){
                 for(int x = 0; x < pixelsImage[y].length; x++) {
                     System.out.print(pixelsImage[y][x] + " ");
                 }
                 System.out.println(" ");
-            }
+            }*/
 
             return countSilhouette;
 
@@ -97,5 +91,21 @@ public class FindLogic {
         }
 
         return pixelArray;
+    }
+
+    /**
+     * Get rgb colors from int pixel
+     * @param pixel pixel
+     * @return array with rgb colors first red, second green, third blue
+     */
+    private int[] getRGB(int pixel){
+
+        int[] rgb = new int[3];// first red, second green, last blue
+
+        rgb[0] = (pixel >> 16) & 0xff;//red
+        rgb[1] = (pixel >> 8) & 0xff;//green
+        rgb[2] = pixel & 0xff;//blue
+
+        return rgb;
     }
 }
