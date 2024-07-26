@@ -41,6 +41,8 @@ public class FindLogic {
 
             System.out.println("Red " + test[0] + " Green " + test[1] + " Blue " + test[2]);
 
+            printImageRGB(pixelsImage);
+
             /*for(int y = 0; y < pixelsImage.length; y++){
                 for(int x = 0; x < pixelsImage[y].length; x++) {
                     System.out.print(pixelsImage[y][x] + " ");
@@ -92,6 +94,32 @@ public class FindLogic {
 
         return pixelArray;
     }
+    //Как вариант что бы было легче высматривать силует можно все оттенки одного цвета которые
+    // размазываются на границе, взять их и сделать одним цветом к примеру контур
+    // лошади черный и разтушовуется в серый для перехода а я его возьму и сделаю весь черным
+    private int[][] convertImage(int[][] pixelImage){
+
+        int[][] resultImage = new int[pixelImage.length][pixelImage[0].length];
+
+        int alpha = 255; // Полностью непрозрачный
+
+        for (int y = 0; y < pixelImage.length; y++) {
+            for (int x = 0; x < pixelImage[y].length; x++) {
+
+                int[] rgbPixel = getRGB(pixelImage[y][x]);
+
+                //Какие то махинации с пикселем
+
+                int pixel = (alpha << 24) | (rgbPixel[0] << 16) | (rgbPixel[1] << 8) | rgbPixel[2];//вовращение в числовой пиксель
+
+            }
+
+        }
+
+        return resultImage;
+    }
+
+
 
     /**
      * Get rgb colors from int pixel
@@ -108,4 +136,20 @@ public class FindLogic {
 
         return rgb;
     }
+
+    /**
+     * Debug method for writing rgb of pixel
+     * @param pixels array with pixel of image
+     */
+    private void printImageRGB(int[][] pixels){
+        for (int y = 0; y < pixels.length; y++) {
+            for (int x = 0; x < pixels[y].length; x++) {
+                int[] rgb = getRGB(pixels[y][x]);
+                System.out.print("( " + rgb[0] + " " + rgb[1] + " " + rgb[2] + " ) ");
+            }
+            System.out.println();
+        }
+    }
+
+
 }
