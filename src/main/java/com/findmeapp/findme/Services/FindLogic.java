@@ -22,11 +22,13 @@ public class FindLogic {
             //Array with rgb pixels of image
             int[][] pixelsImage = getPixelArray(bufferedImage);
 
+            int[][] converPixelImage = convertImage(pixelsImage);
+
             //Logic save in db or check it
             getUploadedImage(photo);
 
             //Get count of silhouette
-            int countSilhouette = findSilhouette(pixelsImage);
+            int countSilhouette = findSilhouette(converPixelImage);
 
 
             //Debug
@@ -110,8 +112,9 @@ public class FindLogic {
 
                 //Какие то махинации с пикселем
 
-                int pixel = (alpha << 24) | (rgbPixel[0] << 16) | (rgbPixel[1] << 8) | rgbPixel[2];//вовращение в числовой пиксель
+                int pixel = (alpha << 24) | (rgbPixel[0] << 16) | (rgbPixel[1] << 8) | rgbPixel[2];//return in intenger pixel
 
+                resultImage[y][x] = pixel;
             }
 
         }
