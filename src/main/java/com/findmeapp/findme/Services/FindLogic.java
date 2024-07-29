@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
+import java.io.File;
 import java.io.IOException;
 
 
@@ -22,16 +24,32 @@ public class FindLogic {
             //Array with rgb pixels of image
             int[][] pixelsImage = getPixelArray(bufferedImage);
 
-            int[][] converPixelImage = convertImage(pixelsImage);
-
             //Logic save in db or check it
             getUploadedImage(photo);
 
             //Get count of silhouette
-            int countSilhouette = findSilhouette(converPixelImage);
+            int countSilhouette = findSilhouette(pixelsImage);
 
 
             //Debug
+
+            //BufferedImage posterizedImage = posterize(bufferedImage, 2); // Количество уровней цвета
+
+            BufferedImage posterizedImage = binarize(bufferedImage); // Количество уровней цвета
+
+            // Создаем директорию для сохранения изображений, если ее нет
+            File outputDir = new File("output_images");
+            if (!outputDir.exists()) {
+                outputDir.mkdirs();
+            }
+
+            // Сохранение изображения в файл в папку проекта
+            String outputFileName = "output_images/posterized_image.jpg";
+            File output = new File(outputFileName);
+            ImageIO.write(posterizedImage, "jpg", output);
+
+
+
             System.out.println("Image was got " + image.getOriginalFilename());
 
             System.out.println(" image width " +  bufferedImage.getWidth()
@@ -44,13 +62,6 @@ public class FindLogic {
             System.out.println("Red " + test[0] + " Green " + test[1] + " Blue " + test[2]);
 
             printImageRGB(pixelsImage);
-
-            /*for(int y = 0; y < pixelsImage.length; y++){
-                for(int x = 0; x < pixelsImage[y].length; x++) {
-                    System.out.print(pixelsImage[y][x] + " ");
-                }
-                System.out.println(" ");
-            }*/
 
             return countSilhouette;
 
@@ -99,30 +110,53 @@ public class FindLogic {
     //Как вариант что бы было легче высматривать силует можно все оттенки одного цвета которые
     // размазываются на границе, взять их и сделать одним цветом к примеру контур
     // лошади черный и разтушовуется в серый для перехода а я его возьму и сделаю весь черным
-    private int[][] convertImage(int[][] pixelImage){
+    private BufferedImage posterize(BufferedImage image, int levels) {
 
-        int[][] resultImage = new int[pixelImage.length][pixelImage[0].length];
+        int width = image.getWidth();
+        int height = image.getHeight();
+        BufferedImage result = new BufferedImage(width, height, image.getType());
 
-        int alpha = 255; // Полностью непрозрачный
+        int factor = 256 / levels;
 
-        for (int y = 0; y < pixelImage.length; y++) {
-            for (int x = 0; x < pixelImage[y].length; x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color color = new Color(image.getRGB(x, y));
 
-                int[] rgbPixel = getRGB(pixelImage[y][x]);
+                int r = (color.getRed() / factor) * factor;
+                int g = (color.getGreen() / factor) * factor;
+                int b = (color.getBlue() / factor) * factor;
 
-                //Какие то махинации с пикселем
-
-                int pixel = (alpha << 24) | (rgbPixel[0] << 16) | (rgbPixel[1] << 8) | rgbPixel[2];//return in intenger pixel
-
-                resultImage[y][x] = pixel;
+                Color newColor = new Color(r, g, b);
+                result.setRGB(x, y, newColor.getRGB());
             }
-
         }
 
-        return resultImage;
+        return result;
     }
 
+    public BufferedImage binarize(BufferedImage image) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        BufferedImage result = new BufferedImage(width, height, image.getType());
 
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Color color = new Color(image.getRGB(x, y));
+
+                // Convert to grayscale
+                int gray = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
+
+                // Apply threshold
+                int threshold = 128; // You can adjust the threshold value if needed
+                int binaryColor = gray >= threshold ? 255 : 0;
+                Color newColor = new Color(binaryColor, binaryColor, binaryColor);
+
+                result.setRGB(x, y, newColor.getRGB());
+            }
+        }
+
+        return result;
+    }
 
     /**
      * Get rgb colors from int pixel
