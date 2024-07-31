@@ -10,6 +10,8 @@ import java.awt.image.BufferedImage;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Service
@@ -33,9 +35,11 @@ public class FindLogic {
 
             //Debug
 
-            //BufferedImage posterizedImage = posterize(bufferedImage, 2); // Количество уровней цвета
 
-            BufferedImage posterizedImage = binarize(bufferedImage); // Количество уровней цвета
+            BufferedImage posterizedImage = posterize(bufferedImage, 2); // Количество уровней цвета
+
+
+
 
             // Создаем директорию для сохранения изображений, если ее нет
             File outputDir = new File("output_images");
@@ -107,6 +111,20 @@ public class FindLogic {
 
         return pixelArray;
     }
+
+    //Для определение фона, метод пройдет по углам картинки и узнаем какой цвет чаще всего содержится, использовать
+    //Хеш мапу для гхранение цвета и его популяторности тоесть он пройдется по всей границе картинки
+    private Color findMostPopularColor(BufferedImage image){
+
+        Map<Color, Integer> countColor = new HashMap<>();
+
+        for (int x = 0; x < image.getWidth(); x++){
+
+        }
+
+        return null;
+    }
+
     //Как вариант что бы было легче высматривать силует можно все оттенки одного цвета которые
     // размазываются на границе, взять их и сделать одним цветом к примеру контур
     // лошади черный и разтушовуется в серый для перехода а я его возьму и сделаю весь черным
@@ -134,29 +152,6 @@ public class FindLogic {
         return result;
     }
 
-    public BufferedImage binarize(BufferedImage image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        BufferedImage result = new BufferedImage(width, height, image.getType());
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Color color = new Color(image.getRGB(x, y));
-
-                // Convert to grayscale
-                int gray = (color.getRed() + color.getGreen() + color.getBlue()) / 3;
-
-                // Apply threshold
-                int threshold = 128; // You can adjust the threshold value if needed
-                int binaryColor = gray >= threshold ? 255 : 0;
-                Color newColor = new Color(binaryColor, binaryColor, binaryColor);
-
-                result.setRGB(x, y, newColor.getRGB());
-            }
-        }
-
-        return result;
-    }
 
     /**
      * Get rgb colors from int pixel
