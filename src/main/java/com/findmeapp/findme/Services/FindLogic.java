@@ -30,7 +30,7 @@ public class FindLogic {
             getUploadedImage(photo);
 
             //Get count of silhouette
-            int countSilhouette = findSilhouette(pixelsImage);
+            int countSilhouette = findSilhouette(bufferedImage);
 
 
             //Debug
@@ -75,8 +75,10 @@ public class FindLogic {
         }
     }
 
-    private int findSilhouette(int[][] pixelsImage){
+    private int findSilhouette(BufferedImage image){
         int countSilhouette = 0;
+
+        Color bgColor = findMostPopularColor(image);
         //Как вариант решение проходить по массиву пиксилей сверху в низ а потом слева в право, и просматривать
         //Обьекты которые заканчиваются по границе и заканчиватся
 
@@ -112,17 +114,48 @@ public class FindLogic {
         return pixelArray;
     }
 
-    //Для определение фона, метод пройдет по углам картинки и узнаем какой цвет чаще всего содержится, использовать
-    //Хеш мапу для гхранение цвета и его популяторности тоесть он пройдется по всей границе картинки
+    /**
+     * Method for finding bg color from image
+     * @param image - where finding bg color
+     * @return - most popular color in bg
+     */
     private Color findMostPopularColor(BufferedImage image){
 
         Map<Color, Integer> countColor = new HashMap<>();
 
         for (int x = 0; x < image.getWidth(); x++){
 
+            //Top edge
+            Color topEdgeColor = new Color(image.getRGB(x, 0));
+            countColor.put(topEdgeColor, countColor.getOrDefault(topEdgeColor, 0) + 1);
+
+            //Bottom edge
+            Color bottomEdgeColor = new Color(image.getRGB(x, image.getHeight() - 1 ));
+            countColor.put(bottomEdgeColor, countColor.getOrDefault(bottomEdgeColor, 0) + 1);
         }
 
-        return null;
+        for (int y = 0; y < image.getHeight(); y++){
+
+            //left edge
+            Color leftEdgeColor = new Color(image.getRGB(0, y));
+            countColor.put(leftEdgeColor, countColor.getOrDefault(leftEdgeColor, 0) + 1);
+
+            //Right edge
+            Color rightEdgeColor = new Color(image.getRGB(image.getWidth() - 1, y));
+            countColor.put(rightEdgeColor, countColor.getOrDefault(rightEdgeColor, 0) + 1);
+        }
+
+        Color backgroundColor = null;
+        int maxCount = 0;
+
+        for (Map.Entry<Color, Integer> entry : countColor.entrySet()) {
+            if (entry.getValue() > maxCount) {
+                backgroundColor = entry.getKey();
+                maxCount = entry.getValue();
+            }
+        }
+
+        return backgroundColor;
     }
 
     //Как вариант что бы было легче высматривать силует можно все оттенки одного цвета которые
