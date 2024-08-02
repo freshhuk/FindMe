@@ -24,7 +24,6 @@ public class FindLogic {
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
 
             //Array with rgb pixels of image
-            int[][] pixelsImage = getPixelArray(bufferedImage);
 
             //Logic save in db or check it
             getUploadedImage(photo);
@@ -32,7 +31,8 @@ public class FindLogic {
             //Get count of silhouette
             int countSilhouette = findSilhouette(bufferedImage);
 
-
+            //Для базы данных еще вариант на освнове какогото из моих методов который проходит по всей картнике
+            //Генеровать строку которая будет как ключь и сохранять этот ключь в базе и по нему искать сущности
             //Debug
 
 
@@ -61,12 +61,6 @@ public class FindLogic {
             System.out.println("RGB - " + bufferedImage.getRGB(3, 4)
                     + " getTileHeight " + bufferedImage.getTileHeight());
 
-            int[] test = getRGB(pixelsImage[1][1]);
-
-            System.out.println("Red " + test[0] + " Green " + test[1] + " Blue " + test[2]);
-
-            printImageRGB(pixelsImage);
-
             return countSilhouette;
 
         } catch (IOException ex) {
@@ -94,25 +88,6 @@ public class FindLogic {
 
     }
 
-
-    /**
-     * Method for getting pixels from image
-     * @param bufferedImage source image
-     * @return array with pixels
-     */
-    private int[][] getPixelArray(BufferedImage bufferedImage) {
-        int width = bufferedImage.getWidth();
-        int height = bufferedImage.getHeight();
-        int[][] pixelArray = new int[height][width];
-
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                pixelArray[y][x] = bufferedImage.getRGB(x, y);
-            }
-        }
-
-        return pixelArray;
-    }
 
     /**
      * Method for finding bg color from image
@@ -202,19 +177,20 @@ public class FindLogic {
         return rgb;
     }
 
-    /**
-     * Debug method for writing rgb of pixel
-     * @param pixels array with pixel of image
-     */
-    private void printImageRGB(int[][] pixels){
-        for (int y = 0; y < pixels.length; y++) {
-            for (int x = 0; x < pixels[y].length; x++) {
-                int[] rgb = getRGB(pixels[y][x]);
-                System.out.print("( " + rgb[0] + " " + rgb[1] + " " + rgb[2] + " ) ");
-            }
-            System.out.println();
-        }
-    }
+    private String imageSpecialCode(BufferedImage image){
 
+        StringBuilder code = new StringBuilder();
+
+        for(int i = 0; i < image.getWidth(); i++){
+
+            int[] rgb = getRGB(image.getRGB(i, 0));
+
+            int numCode = rgb[0] + rgb[1] + rgb[2];
+
+            code.append(numCode);
+        }
+
+        return code.toString();
+    }
 
 }
