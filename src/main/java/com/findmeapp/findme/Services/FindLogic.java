@@ -84,8 +84,9 @@ public class FindLogic {
      * Method for saving entity into db or get this entity from db
      * @param photo object for loading into db
      */
-    private void getUploadedImage(Photo photo){
+    private void getUploadedImage(Photo photo, BufferedImage image){
 
+        photo.setIndentityCode(imageIdentityCode(image));//set identity code
     }
 
 
@@ -133,9 +134,6 @@ public class FindLogic {
         return backgroundColor;
     }
 
-    //Как вариант что бы было легче высматривать силует можно все оттенки одного цвета которые
-    // размазываются на границе, взять их и сделать одним цветом к примеру контур
-    // лошади черный и разтушовуется в серый для перехода а я его возьму и сделаю весь черным
     private BufferedImage posterize(BufferedImage image, int levels) {
 
         int width = image.getWidth();
@@ -177,7 +175,12 @@ public class FindLogic {
         return rgb;
     }
 
-    private String imageSpecialCode(BufferedImage image){
+    /**
+     * Method generate identity code for entity on db
+     * @param image image for generate code
+     * @return integer code
+     */
+    private String imageIdentityCode(BufferedImage image){
 
         StringBuilder code = new StringBuilder();
 
@@ -187,6 +190,9 @@ public class FindLogic {
 
             int numCode = rgb[0] + rgb[1] + rgb[2];
 
+            if(code.length() > 45){
+                code.delete(0, 20);
+            }
             code.append(numCode);
         }
 

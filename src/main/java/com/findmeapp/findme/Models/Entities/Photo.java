@@ -10,4 +10,5 @@ public class Photo {
     private int countSilhouette;
     private String format;
     private long size;
+    private String indentityCode;
 }
