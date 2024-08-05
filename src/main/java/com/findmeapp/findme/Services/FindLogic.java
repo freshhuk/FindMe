@@ -1,7 +1,10 @@
 package com.findmeapp.findme.Services;
 
 import com.findmeapp.findme.Models.Entities.Photo;
+import com.findmeapp.findme.Repositories.PhotoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -17,29 +20,25 @@ import java.util.Map;
 @Service
 public class FindLogic {
 
+    private final PhotoRepository repository;
+
+    @Autowired
+    public FindLogic(PhotoRepository repository){
+        this.repository = repository;
+    }
+
     public int getSilhouette(MultipartFile image, Photo photo){
         try {
 
             // Read image
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
 
-            //Array with rgb pixels of image
+            //Logic save in db or check it and Get count of silhouette
+            int countSilhouette = getUploadedImage(photo,bufferedImage);
 
-            //Logic save in db or check it
-            getUploadedImage(photo);
-
-            //Get count of silhouette
-            int countSilhouette = findSilhouette(bufferedImage);
-
-            //Для базы данных еще вариант на освнове какогото из моих методов который проходит по всей картнике
-            //Генеровать строку которая будет как ключь и сохранять этот ключь в базе и по нему искать сущности
             //Debug
 
-
             BufferedImage posterizedImage = posterize(bufferedImage, 2); // Количество уровней цвета
-
-
-
 
             // Создаем директорию для сохранения изображений, если ее нет
             File outputDir = new File("output_images");
@@ -84,9 +83,19 @@ public class FindLogic {
      * Method for saving entity into db or get this entity from db
      * @param photo object for loading into db
      */
-    private void getUploadedImage(Photo photo, BufferedImage image){
+    private int getUploadedImage(Photo photo, BufferedImage image){
 
         photo.setIndentityCode(imageIdentityCode(image));//set identity code
+
+        Photo originPhoto = repository.getByModel(photo);
+        if(originPhoto != null){
+            return originPhoto.getCountSilhouette();
+        }
+        else{
+            photo.setCountSilhouette(findSilhouette(image));
+            repository.Add(photo);
+            return photo.getCountSilhouette();
+        }
     }
 
 
