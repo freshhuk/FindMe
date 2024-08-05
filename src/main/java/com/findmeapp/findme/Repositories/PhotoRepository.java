@@ -14,11 +14,12 @@ public class PhotoRepository {
             .buildSessionFactory();
 
 
-    public void Add(){
+    public void Add(Photo model){
 
     }
-    public void get(){
+    public Photo getByModel(Photo model){
 
+        return null;
     }
     public void delete(){
 
