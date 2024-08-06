@@ -7,7 +7,6 @@
 
 
         <!-- Mapping clases -->
-        <mapping class="com.bank.cyberbank.Domain.Entity.User"/>
-        <mapping class="com.bank.cyberbank.Domain.Entity.BankCard"/>
+        <mapping class="com.findmeapp.findme.Models.Entities.Photo"/>
     </session-factory>
 </hibernate-configuration>

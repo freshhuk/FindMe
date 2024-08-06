@@ -27,7 +27,6 @@ public class APIController {
         // Data for save db
         Photo photo = new Photo();{
             photo.setFileName(image.getOriginalFilename());
-            photo.setSize(image.getSize());
             photo.setFormat(image.getContentType());
             photo.setCountSilhouette(0);
         }

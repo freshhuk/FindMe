@@ -76,7 +76,7 @@ public class FindLogic {
         //Обьекты которые заканчиваются по границе и заканчиватся
 
 
-        return 0;
+        return 13;
     }
 
     /**
@@ -85,7 +85,7 @@ public class FindLogic {
      */
     private int getUploadedImage(Photo photo, BufferedImage image){
 
-        photo.setIndentityCode(imageIdentityCode(image));//set identity code
+        photo.setIdentityCode(imageIdentityCode(image));//set identity code
 
         Photo originPhoto = repository.getByModel(photo);
         if(originPhoto != null){

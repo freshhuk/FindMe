@@ -19,6 +19,14 @@ public class PhotoRepository {
     }
     public Photo getByModel(Photo model){
 
+
+        //debug
+        Photo test = new Photo();
+        test.setIdentityCode("111");
+        test.setId(1);
+        test.setCountSilhouette(2);
+
+
         return null;
     }
     public void delete(){
