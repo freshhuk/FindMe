@@ -1,10 +1,7 @@
 package com.findmeapp.findme.Models.Entities;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,16 +16,18 @@ import lombok.NoArgsConstructor;
 public class Photo {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-    @Column(name = "fileName")
-    private String fileName;
+    @Column(name = "filename")
+    private String filename;
 
-    @Column(name = "countSilhouette")
-    private int countSilhouette;
+    @Column(name = "countsilhouette")
+    private int countsilhouette;
 
     @Column(name = "format")
     private String format;
 
-    @Column(name = "indentityCode")
-    private String identityCode;
+    @Column(name = "indentitycode")
+    private String indentitycode;
+
 }
