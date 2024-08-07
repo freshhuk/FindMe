@@ -26,12 +26,10 @@ public class APIController {
 
         // Data for save db
         Photo photo = new Photo();{
-            photo.setFileName(image.getOriginalFilename());
+            photo.setFilename(image.getOriginalFilename());
             photo.setFormat(image.getContentType());
-            photo.setCountSilhouette(0);
+            photo.setCountsilhouette(0);
         }
-
-        System.out.println("Size image " + image.getSize() + " OriginalFile name " + image.getOriginalFilename() + " Content type" + image.getContentType());
 
         int count = findSilhouetteService.getSilhouette(image, photo);
 

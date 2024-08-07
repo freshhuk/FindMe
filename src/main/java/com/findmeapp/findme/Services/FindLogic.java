@@ -85,16 +85,16 @@ public class FindLogic {
      */
     private int getUploadedImage(Photo photo, BufferedImage image){
 
-        photo.setIdentityCode(imageIdentityCode(image));//set identity code
+        photo.setIndentitycode(imageIdentityCode(image));//set identity code
 
         Photo originPhoto = repository.getByModel(photo);
         if(originPhoto != null){
-            return originPhoto.getCountSilhouette();
+            return originPhoto.getCountsilhouette();
         }
         else{
-            photo.setCountSilhouette(findSilhouette(image));
+            photo.setCountsilhouette(findSilhouette(image));
             repository.Add(photo);
-            return photo.getCountSilhouette();
+            return photo.getCountsilhouette();
         }
     }
 
