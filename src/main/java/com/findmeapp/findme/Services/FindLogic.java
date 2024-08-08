@@ -4,7 +4,6 @@ import com.findmeapp.findme.Models.Entities.Photo;
 import com.findmeapp.findme.Repositories.PhotoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
@@ -36,7 +35,7 @@ public class FindLogic {
             //Logic save in db or check it and Get count of silhouette
             int countSilhouette = getUploadedImage(photo,bufferedImage);
 
-            //Debug
+           /* //Debug
 
             BufferedImage posterizedImage = posterize(bufferedImage, 2); // Количество уровней цвета
 
@@ -50,16 +49,7 @@ public class FindLogic {
             String outputFileName = "output_images/posterized_image.jpg";
             File output = new File(outputFileName);
             ImageIO.write(posterizedImage, "jpg", output);
-
-
-
-            System.out.println("Image was got " + image.getOriginalFilename());
-
-            System.out.println(" image width " +  bufferedImage.getWidth()
-                    + " Height " + bufferedImage.getHeight());
-            System.out.println("RGB - " + bufferedImage.getRGB(3, 4)
-                    + " getTileHeight " + bufferedImage.getTileHeight());
-
+            */
             return countSilhouette;
 
         } catch (IOException ex) {
@@ -89,6 +79,7 @@ public class FindLogic {
 
         Photo originPhoto = repository.getByModel(photo);
         if(originPhoto != null){
+            System.out.println("Image was found");
             return originPhoto.getCountsilhouette();
         }
         else{
