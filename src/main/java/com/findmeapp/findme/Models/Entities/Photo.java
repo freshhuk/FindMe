@@ -16,8 +16,10 @@ import lombok.NoArgsConstructor;
 public class Photo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "photos_id_seq")
+    @SequenceGenerator(name = "photos_id_seq", sequenceName = "photos_id_seq", allocationSize = 1)
     private int id;
+
     @Column(name = "filename")
     private String filename;
 
