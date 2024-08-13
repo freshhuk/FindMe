@@ -2,10 +2,8 @@ package com.findmeapp.findme.Services;
 
 import com.findmeapp.findme.Models.Entities.Photo;
 import com.findmeapp.findme.Repositories.PhotoRepository;
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfPoint;
+import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,6 +24,7 @@ import java.util.List;
 public class FindLogic {
 
     static {
+        System.setProperty("java.library.path", "D:\\opencv\\build\\java\\x64");
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
     private final PhotoRepository repository;
@@ -54,20 +53,45 @@ public class FindLogic {
     }
 
     private int findSilhouette(BufferedImage sourse) {
+// Находим цвет фона
+        Color backgroundColor = findMostPopularColor(sourse);
 
-
+        // Преобразуем BufferedImage в Mat
         Mat image = bufferedImageToMat(sourse);
 
+        // Преобразуем изображение в градации серого
         Mat grayscale = new Mat();
-
         Imgproc.cvtColor(image, grayscale, Imgproc.COLOR_BGR2GRAY);
 
-        Mat binaryImage = new Mat();
-        Imgproc.threshold(grayscale, binaryImage, 100, 255, Imgproc.THRESH_BINARY);
+        // Создаем бинарное изображение на основе цвета фона
+        Mat binaryImage = new Mat(grayscale.size(), CvType.CV_8UC1);
 
+        for (int y = 0; y < grayscale.rows(); y++) {
+            for (int x = 0; x < grayscale.cols(); x++) {
+                Color pixelColor = new Color(sourse.getRGB(x, y));
+                if (pixelColor.equals(backgroundColor)) {
+                    binaryImage.put(y, x, 0); // Фон — черный
+                } else {
+                    binaryImage.put(y, x, 255); // Объекты — белые
+                }
+            }
+        }
+
+        // Поиск контуров
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(binaryImage, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
+        // Визуализация контуров
+        /*Mat drawing = Mat.zeros(binaryImage.size(), CvType.CV_8UC3);
+        for (int i = 0; i < contours.size(); i++) {
+            Imgproc.drawContours(drawing, contours, i, new Scalar(0, 255, 0), 2);
+        }
+*/
+
+        // Сохранение изображения с контурами
+        Imgcodecs.imwrite("output_images/contours.png", binaryImage);
+
+        // Количество силуэтов
         int silhouetteCount = contours.size();
         System.out.println("Количество силуэтов: " + silhouetteCount);
 
