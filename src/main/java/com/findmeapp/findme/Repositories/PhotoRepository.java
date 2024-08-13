@@ -57,8 +57,37 @@ public class PhotoRepository {
     }
     public void delete(){
 
+        try(Session session = factory.openSession()){
+
+            session.beginTransaction();
+
+            session.createQuery("DELETE FROM Photo").executeUpdate();
+
+            session.getTransaction().commit();
+        }catch (Exception ex) {
+            System.out.println("Error method delete" + ex);
+
+        }
     }
+
     public void update(){
 
+    }
+
+    public Photo getLastPhoto(){
+        try (Session session = factory.openSession()) {
+
+            session.beginTransaction();
+
+            Query<Photo> query = session.createQuery("from Photo ORDER BY id DESC", Photo.class);
+            query.setMaxResults(1);
+            Photo photo = query.uniqueResult();
+            session.getTransaction().commit();
+            return photo;
+
+        }catch (Exception ex) {
+            System.out.println("Error method getLastPhoto" + ex);
+            return null;
+        }
     }
 }
