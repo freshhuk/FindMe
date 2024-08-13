@@ -2,8 +2,10 @@ package com.findmeapp.findme.Controllers;
 
 import com.findmeapp.findme.Models.Entities.Photo;
 import com.findmeapp.findme.Services.FindLogic;
+import com.findmeapp.findme.Services.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,10 +17,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class APIController {
 
     private final FindLogic findSilhouetteService;
+    private final ImageService imageService;
 
     @Autowired
-    public APIController(FindLogic findSilhouetteService){
+    public APIController(FindLogic findSilhouetteService, ImageService imageService){
         this.findSilhouetteService = findSilhouetteService;
+        this.imageService = imageService;
     }
 
     @PostMapping("/getSilhouette")
@@ -35,5 +39,13 @@ public class APIController {
 
         return ResponseEntity.ok().body("Cont - " + count);
     }
+    @DeleteMapping("/deleteAll")
+    public ResponseEntity<String> deleteAllPhoto(){
 
+        String result = imageService.deleteAllImage();
+        if(result.equals("Successful")){
+            return ResponseEntity.ok().body("All entity was deleted");
+        }
+        return ResponseEntity.badRequest().body("Error with deleting");
+    }
 }
