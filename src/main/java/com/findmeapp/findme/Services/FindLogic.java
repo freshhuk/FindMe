@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 @Service
 public class FindLogic {
 
@@ -105,7 +107,7 @@ public class FindLogic {
      */
     private int getUploadedImage(Photo photo, BufferedImage image) {
 
-        photo.setIndentitycode(imageIdentityCode(image));//set identity code
+        photo.setIndentitycode(imageIdentityCode(image, photo));//set identity code
 
         Photo originPhoto = repository.getByModel(photo);
         if (originPhoto != null) {
@@ -117,6 +119,7 @@ public class FindLogic {
             return photo.getCountsilhouette();
         }
     }
+
 
 
     /**
@@ -195,7 +198,8 @@ public class FindLogic {
      * @param image image for generate code
      * @return integer code
      */
-    private String imageIdentityCode(BufferedImage image) {
+    private String imageIdentityCode(BufferedImage image, Photo photo) {
+
 
         StringBuilder code = new StringBuilder();
 
@@ -210,6 +214,11 @@ public class FindLogic {
             }
             code.append(numCode);
         }
+
+        String sha256Hex = DigestUtils.sha256Hex(photo.getFilename());
+
+        code.append(sha256Hex);
+        code.delete(0, 15).delete(55, 75);
 
         return code.toString();
     }
