@@ -29,6 +29,7 @@ public class FindLogic {
         System.setProperty("java.library.path", "D:\\opencv\\build\\java\\x64");
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
     }
+
     private final PhotoRepository repository;
 
     @Autowired
@@ -55,23 +56,28 @@ public class FindLogic {
     }
 
     private int findSilhouette(BufferedImage sourse) {
-// Находим цвет фона
+        // Находим цвет фона
         Color backgroundColor = findMostPopularColor(sourse);
 
-        // Преобразуем BufferedImage в Mat
         Mat image = bufferedImageToMat(sourse);
 
         // Преобразуем изображение в градации серого
         Mat grayscale = new Mat();
         Imgproc.cvtColor(image, grayscale, Imgproc.COLOR_BGR2GRAY);
 
-        // Создаем бинарное изображение на основе цвета фона
-        Mat binaryImage = new Mat(grayscale.size(), CvType.CV_8UC1);
+        // Размытие для сглаживания изображения
+        Mat blurred = new Mat();
+        Imgproc.GaussianBlur(grayscale, blurred, new Size(5, 5), 0);
+
+        // Создаем бинарное изображение на основе дистанции цвета
+        Mat binaryImage = new Mat(blurred.size(), CvType.CV_8UC1);
+        double threshold = 50.0; // Задаем порог для сравнения цветов
 
         for (int y = 0; y < grayscale.rows(); y++) {
             for (int x = 0; x < grayscale.cols(); x++) {
                 Color pixelColor = new Color(sourse.getRGB(x, y));
-                if (pixelColor.equals(backgroundColor)) {
+                double distance = colorDistance(pixelColor, backgroundColor);
+                if (distance < threshold) {
                     binaryImage.put(y, x, 0); // Фон — черный
                 } else {
                     binaryImage.put(y, x, 255); // Объекты — белые
@@ -79,26 +85,43 @@ public class FindLogic {
             }
         }
 
+        // Морфологические операции для улучшения изображения
+        Mat dilated = new Mat();
+        Mat eroded = new Mat();
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
+        Imgproc.dilate(binaryImage, dilated, kernel);
+        Imgproc.erode(dilated, eroded, kernel);
+
         // Поиск контуров
         List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(binaryImage, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+        Imgproc.findContours(eroded, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        // Визуализация контуров
-        /*Mat drawing = Mat.zeros(binaryImage.size(), CvType.CV_8UC3);
-        for (int i = 0; i < contours.size(); i++) {
-            Imgproc.drawContours(drawing, contours, i, new Scalar(0, 255, 0), 2);
+        // Фильтрация контуров по площади
+        double minContourArea = 100.0;
+        List<MatOfPoint> filteredContours = new ArrayList<>();
+        for (MatOfPoint contour : contours) {
+            if (Imgproc.contourArea(contour) > minContourArea) {
+                filteredContours.add(contour);
+            }
         }
-*/
 
         // Сохранение изображения с контурами
-        Imgcodecs.imwrite("output_images/contours.png", binaryImage);
+        Imgcodecs.imwrite("output_images/contours.png", eroded);
 
         // Количество силуэтов
-        int silhouetteCount = contours.size();
+        int silhouetteCount = filteredContours.size();
         System.out.println("Количество силуэтов: " + silhouetteCount);
 
         return silhouetteCount;
     }
+
+    // Метод для вычисления евклидовой дистанции между цветами
+    private double colorDistance(Color c1, Color c2) {
+        return Math.sqrt(Math.pow(c1.getRed() - c2.getRed(), 2) +
+                Math.pow(c1.getGreen() - c2.getGreen(), 2) +
+                Math.pow(c1.getBlue() - c2.getBlue(), 2));
+    }
+
 
     /**
      * Method for saving entity into db or get this entity from db
@@ -119,7 +142,6 @@ public class FindLogic {
             return photo.getCountsilhouette();
         }
     }
-
 
 
     /**
