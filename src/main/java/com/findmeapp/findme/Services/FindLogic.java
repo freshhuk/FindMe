@@ -43,10 +43,11 @@ public class FindLogic {
             // Read image
             BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
 
+            int countSilhouette = 0;
             //Logic save in db or check it and Get count of silhouette
-            int countSilhouette = getUploadedImage(photo, bufferedImage);
-
-
+            if(bufferedImage != null){
+                countSilhouette = getUploadedImage(photo, bufferedImage);
+            }
             return countSilhouette;
 
         } catch (IOException ex) {
@@ -56,47 +57,47 @@ public class FindLogic {
     }
 
     private int findSilhouette(BufferedImage sourse) {
-        // Находим цвет фона
+        // Finding the background color
         Color backgroundColor = findMostPopularColor(sourse);
 
         Mat image = bufferedImageToMat(sourse);
 
-        // Преобразуем изображение в градации серого
+        // Converting the image to grayscale
         Mat grayscale = new Mat();
         Imgproc.cvtColor(image, grayscale, Imgproc.COLOR_BGR2GRAY);
 
-        // Размытие для сглаживания изображения
+        // Blur to smooth out an image
         Mat blurred = new Mat();
         Imgproc.GaussianBlur(grayscale, blurred, new Size(5, 5), 0);
 
-        // Создаем бинарное изображение на основе дистанции цвета
+        // Creating a binary image based on color distance
         Mat binaryImage = new Mat(blurred.size(), CvType.CV_8UC1);
-        double threshold = 50.0; // Задаем порог для сравнения цветов
+        double threshold = 50.0; // Set a threshold for color comparison
 
         for (int y = 0; y < grayscale.rows(); y++) {
             for (int x = 0; x < grayscale.cols(); x++) {
                 Color pixelColor = new Color(sourse.getRGB(x, y));
                 double distance = colorDistance(pixelColor, backgroundColor);
                 if (distance < threshold) {
-                    binaryImage.put(y, x, 0); // Фон — черный
+                    binaryImage.put(y, x, 0); // BG - black
                 } else {
-                    binaryImage.put(y, x, 255); // Объекты — белые
+                    binaryImage.put(y, x, 255); // Objects - white
                 }
             }
         }
 
-        // Морфологические операции для улучшения изображения
+        // Morphological operations for image enhancement
         Mat dilated = new Mat();
         Mat eroded = new Mat();
         Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
         Imgproc.dilate(binaryImage, dilated, kernel);
         Imgproc.erode(dilated, eroded, kernel);
 
-        // Поиск контуров
+        // Search for contours
         List<MatOfPoint> contours = new ArrayList<>();
         Imgproc.findContours(eroded, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-        // Фильтрация контуров по площади
+        // Filtering contours by area
         double minContourArea = 100.0;
         List<MatOfPoint> filteredContours = new ArrayList<>();
         for (MatOfPoint contour : contours) {
@@ -105,17 +106,17 @@ public class FindLogic {
             }
         }
 
-        // Сохранение изображения с контурами
+        // Saving an image with outlines for debugging
         Imgcodecs.imwrite("output_images/contours.png", eroded);
 
-        // Количество силуэтов
+        // Count silhouette
         int silhouetteCount = filteredContours.size();
         System.out.println("Количество силуэтов: " + silhouetteCount);
 
         return silhouetteCount;
     }
 
-    // Метод для вычисления евклидовой дистанции между цветами
+    /** Method for calculating Euclidean distance between colors */
     private double colorDistance(Color c1, Color c2) {
         return Math.sqrt(Math.pow(c1.getRed() - c2.getRed(), 2) +
                 Math.pow(c1.getGreen() - c2.getGreen(), 2) +
@@ -125,7 +126,6 @@ public class FindLogic {
 
     /**
      * Method for saving entity into db or get this entity from db
-     *
      * @param photo object for loading into db
      */
     private int getUploadedImage(Photo photo, BufferedImage image) {
