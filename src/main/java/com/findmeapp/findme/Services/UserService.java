@@ -15,7 +15,7 @@ public class UserService {
         this.repository = repository;
     }
 
-    public User create(User user) {
+    public User createUser(User user) {
         if (repository.existsByUsername(user.getUsername())) {
             throw new RuntimeException("A user with the same name already exists");
         } else {
