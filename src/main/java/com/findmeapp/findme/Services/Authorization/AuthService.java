@@ -1,0 +1,63 @@
+package com.findmeapp.findme.Services.Authorization;
+
+import com.findmeapp.findme.Models.DTO.JwtAuthenticationResponse;
+import com.findmeapp.findme.Models.DTO.SignInUserDTO;
+import com.findmeapp.findme.Models.DTO.SignOnUserDTO;
+import com.findmeapp.findme.Models.Entities.User;
+import com.findmeapp.findme.Models.Enums.Role;
+import lombok.AllArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@AllArgsConstructor
+public class AuthService {
+
+    private final UserService userService;
+    private final JWTService jwtService;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
+
+    /**
+     * User registration
+     *
+     * @param request User data
+     * @return token
+     */
+    public JwtAuthenticationResponse signUp(SignInUserDTO request) {
+
+        var user = User.builder()
+                .username(request.getUsername())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.USER)
+                .build();
+
+        userService.createUser(user);
+
+        var jwt = jwtService.generateToken(user);
+        return new JwtAuthenticationResponse(jwt);
+    }
+
+    /**
+     * Аутентификация пользователя
+     *
+     * @param request данные пользователя
+     * @return токен
+     */
+    public JwtAuthenticationResponse signIn(SignOnUserDTO request) {
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                request.getUsername(),
+                request.getPassword()
+        ));
+
+        var user = userService
+                .userDetailsService()
+                .loadUserByUsername(request.getUsername());
+
+        var jwt = jwtService.generateToken(user);
+        return new JwtAuthenticationResponse(jwt);
+    }
+}
