@@ -17,5 +17,6 @@
 
         <!-- Mapping clases -->
         <mapping class="com.findmeapp.findme.Models.Entities.Photo"/>
+        <mapping class="com.findmeapp.findme.Models.Entities.User"/>
     </session-factory>
 </hibernate-configuration>

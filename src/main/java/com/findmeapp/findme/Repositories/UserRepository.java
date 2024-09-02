@@ -12,7 +12,7 @@ import java.util.Optional;
 @Repository
 public class UserRepository {
     private final SessionFactory factory = new Configuration()
-            .configure(".cfg.xml")
+            .configure("hibernateconfig.cfg.xml")
             .addAnnotatedClass(User.class)
             .buildSessionFactory();
 

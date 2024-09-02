@@ -1,18 +1,18 @@
 package com.findmeapp.findme.Services.Authorization;
 
 import com.findmeapp.findme.Models.DTO.JwtAuthenticationResponse;
+import com.findmeapp.findme.Models.DTO.SignUpUserDTO;
 import com.findmeapp.findme.Models.DTO.SignInUserDTO;
-import com.findmeapp.findme.Models.DTO.SignOnUserDTO;
 import com.findmeapp.findme.Models.Entities.User;
 import com.findmeapp.findme.Models.Enums.Role;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserService userService;
@@ -26,7 +26,7 @@ public class AuthService {
      * @param request User data
      * @return token
      */
-    public JwtAuthenticationResponse signUp(SignInUserDTO request) {
+    public JwtAuthenticationResponse signUp(SignUpUserDTO request) {
 
         var user = User.builder()
                 .username(request.getUsername())
@@ -47,7 +47,7 @@ public class AuthService {
      * @param request данные пользователя
      * @return токен
      */
-    public JwtAuthenticationResponse signIn(SignOnUserDTO request) {
+    public JwtAuthenticationResponse signIn(SignInUserDTO request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getUsername(),
                 request.getPassword()
