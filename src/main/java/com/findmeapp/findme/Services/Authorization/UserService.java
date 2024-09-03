@@ -19,12 +19,15 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        if (repository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("A user with the same name already exists");
-        } else {
-           repository.Add(user);
+        try{
+            if(user != null && repository.existsByUsername(user.getUsername())){
+                repository.Add(user);
+            }
+            return user;
+        } catch (Exception ex){
+            System.out.println("Error with createUser " + ex);
+            return null;
         }
-        return user;
     }
 
 

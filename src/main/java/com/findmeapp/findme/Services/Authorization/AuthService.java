@@ -35,7 +35,7 @@ public class AuthService {
                 .role(Role.USER)
                 .build();
 
-        userService.createUser(user);
+        user = userService.createUser(user);
 
         var jwt = jwtService.generateToken(user);
         return new JwtAuthenticationResponse(jwt);
