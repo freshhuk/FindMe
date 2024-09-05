@@ -42,10 +42,10 @@ public class AuthService {
     }
 
     /**
-     * Аутентификация пользователя
+     * User authentication
      *
-     * @param request данные пользователя
-     * @return токен
+     * @param request User data
+     * @return token
      */
     public JwtAuthenticationResponse signIn(SignInUserDTO request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
