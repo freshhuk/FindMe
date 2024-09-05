@@ -18,23 +18,24 @@ import java.util.function.Function;
 @Service
 public class JWTService {
 
+    /* Identity key for sign token */
     private final static String JWTSIGNKEY = "YmFzZTY0RW5jb2RlZFJhbmRvbVNlY3JldEtleTEyMzQ1Ng==";
 
     /**
-     * Извлечение имени пользователя из токена
+     * Extracting username from token
      *
-     * @param token токен
-     * @return имя пользователя
+     * @param token token
+     * @return username
      */
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
     /**
-     * Генерация токена
+     * Generate Token
      *
-     * @param userDetails данные пользователя
-     * @return токен
+     * @param userDetails User data
+     * @return token
      */
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
@@ -47,11 +48,11 @@ public class JWTService {
     }
 
     /**
-     * Проверка токена на валидность
+     * Checking the token for validity
      *
-     * @param token       токен
-     * @param userDetails данные пользователя
-     * @return true, если токен валиден
+     * @param token       token
+     * @param userDetails user data
+     * @return true if the token is valid
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String userName = extractUserName(token);
@@ -59,12 +60,12 @@ public class JWTService {
     }
 
     /**
-     * Извлечение данных из токена
+     * Extracting data from a token
      *
-     * @param token           токен
-     * @param claimsResolvers функция извлечения данных
-     * @param <T>             тип данных
-     * @return данные
+     * @param token           token
+     * @param claimsResolvers data retrieval function
+     * @param <T>             data type
+     * @return data
      */
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
         final Claims claims = extractAllClaims(token);
@@ -72,11 +73,11 @@ public class JWTService {
     }
 
     /**
-     * Генерация токена
+     * Generate Token
      *
-     * @param extraClaims дополнительные данные
-     * @param userDetails данные пользователя
-     * @return токен
+     * @param extraClaims additional data
+     * @param userDetails user data
+     * @return token
      */
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
@@ -86,30 +87,30 @@ public class JWTService {
     }
 
     /**
-     * Проверка токена на просроченность
+     * Checking the token for expiration
      *
-     * @param token токен
-     * @return true, если токен просрочен
+     * @param token token
+     * @return true if the token is expired
      */
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
     /**
-     * Извлечение даты истечения токена
+     * Retrieving token expiration date
      *
-     * @param token токен
-     * @return дата истечения
+     * @param token token
+     * @return expiry data
      */
     private Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
     /**
-     * Извлечение всех данных из токена
+     * Extracting all data from a token
      *
-     * @param token токен
-     * @return данные
+     * @param token token
+     * @return data
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
@@ -117,9 +118,9 @@ public class JWTService {
     }
 
     /**
-     * Получение ключа для подписи токена
+     * Getting key for sign token
      *
-     * @return ключ
+     * @return key
      */
     private Key getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(JWTSIGNKEY);

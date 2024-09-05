@@ -70,10 +70,6 @@ public class PhotoRepository {
         }
     }
 
-    public void update(){
-
-    }
-
     public Photo getLastPhoto(){
         try (Session session = factory.openSession()) {
 
