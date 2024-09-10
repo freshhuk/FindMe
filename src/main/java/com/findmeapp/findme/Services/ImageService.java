@@ -14,13 +14,12 @@ public class ImageService {
         this.repository = repository;
     }
 
-
     public String deleteAllImage(){
         try{
             repository.delete();
             return "Successful";
         } catch (Exception ex){
-            System.out.println("Error with deleting all entity");
+            System.out.println("Error with deleting all entity ");
             return "Error";
         }
     }
