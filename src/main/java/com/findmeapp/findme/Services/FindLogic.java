@@ -39,15 +39,17 @@ public class FindLogic {
 
     public int getSilhouette(MultipartFile image, Photo photo) {
         try {
-
-            // Read image
-            BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
-
             int countSilhouette = 0;
-            //Logic save in db or check it and Get count of silhouette
-            if(bufferedImage != null){
-                countSilhouette = getUploadedImage(photo, bufferedImage);
+            if(image != null){
+                // Read image
+                BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+
+                //Logic save in db or check it and Get count of silhouette
+                if(bufferedImage != null){
+                    countSilhouette = getUploadedImage(photo, bufferedImage);
+                }
             }
+
             return countSilhouette;
 
         } catch (IOException ex) {
