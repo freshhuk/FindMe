@@ -113,7 +113,7 @@ public class FindLogic {
 
         // Count silhouette
         int silhouetteCount = filteredContours.size();
-        System.out.println("Количество силуэтов: " + silhouetteCount);
+        System.out.println("Count silhouette: " + silhouetteCount);
 
         return silhouetteCount;
     }
