@@ -28,16 +28,18 @@ public class APIController {
     @PostMapping("/getSilhouette")
     public ResponseEntity<String> getSilhouette(MultipartFile image){
 
-        // Data for save db
-        Photo photo = new Photo();{
-            photo.setFilename(image.getOriginalFilename());
-            photo.setFormat(image.getContentType());
-            photo.setCountsilhouette(0);
+        if(image != null){
+            // Data for save db
+            Photo photo = new Photo();{
+                photo.setFilename(image.getOriginalFilename());
+                photo.setFormat(image.getContentType());
+                photo.setCountsilhouette(0);
+            }
+
+            int count = findSilhouetteService.getSilhouette(image, photo);
+            return ResponseEntity.ok().body("Cont - " + count);
         }
-
-        int count = findSilhouetteService.getSilhouette(image, photo);
-
-        return ResponseEntity.ok().body("Cont - " + count);
+        return ResponseEntity.badRequest().body("image null");
     }
     @DeleteMapping("/deleteAll")
     public ResponseEntity<String> deleteAllPhoto(){
