@@ -70,6 +70,7 @@ public class PhotoRepository {
         }
     }
 
+    @Deprecated
     public Photo getLastPhoto(){
         try (Session session = factory.openSession()) {
 

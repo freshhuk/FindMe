@@ -90,17 +90,13 @@ public class FindLogicTest {
         // Указываем путь к картинке на диске
         File file = new File("src/test/java/com/findmeapp/findme/TestImage/test.jpg");
 
-        // Читаем файл в массив байтов
         FileInputStream input = new FileInputStream(file);
 
-        // Создаем MockMultipartFile
-        MultipartFile multipartFile = new MockMultipartFile(
-                "image",                  // имя параметра
-                file.getName(),            // оригинальное имя файла
-                "image/jpeg",              // MIME-тип
-                input                      // содержимое файла в виде InputStream
+        return new MockMultipartFile(
+                "image",
+                file.getName(),
+                "image/jpeg",
+                input
         );
-
-        return multipartFile;
     }
 }
