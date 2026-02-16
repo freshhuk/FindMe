@@ -37,8 +37,9 @@ public class PhotoRepository {
 
             session.beginTransaction();
 
+            // Добавляем псевдоним "p"
             Query<Photo> query = session.createQuery(
-                    "from Photo where format = :format AND filename = :filename AND indentitycode = :indentitycode",
+                    "select p from Photo p where p.format = :format AND p.filename = :filename AND p.indentitycode = :indentitycode",
                     Photo.class
             );
             query.setParameter("format", model.getFormat());

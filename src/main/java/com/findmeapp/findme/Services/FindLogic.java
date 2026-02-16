@@ -2,249 +2,185 @@ package com.findmeapp.findme.Services;
 
 import com.findmeapp.findme.Models.Entities.Photo;
 import com.findmeapp.findme.Repositories.PhotoRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-
-import java.awt.image.DataBufferByte;
 import java.io.IOException;
+import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
+@Slf4j
 @Service
 public class FindLogic {
 
-    static {
-        System.setProperty("java.library.path", "D:\\opencv\\build\\java\\x64");
-        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-    }
-
     private final PhotoRepository repository;
 
-    @Autowired
+    @Value("${opencv.library.path:D:\\LibraryJava\\opencv\\build\\java\\x64}")
+    private String libPath;
+
+    @Value("${opencv.library.name:opencv_java4100}")
+    private String libName;
+
+    private static final double MAX_WIDTH = 1024.0;
+    private static final double MIN_CONTOUR_AREA_PERCENT = 0.005;
+    private static final double CANNY_THRESHOLD_1 = 50.0;
+    private static final double CANNY_THRESHOLD_2 = 150.0;
+
     public FindLogic(PhotoRepository repository) {
         this.repository = repository;
     }
 
-    public int getSilhouette(MultipartFile image, Photo photo) {
+    @PostConstruct
+    public void init() {
+        System.setProperty("java.library.path", libPath);
         try {
-            int countSilhouette = 0;
-            if(image != null){
-                // Read image
-                BufferedImage bufferedImage = ImageIO.read(image.getInputStream());
+            System.loadLibrary(libName);
+            log.info("OpenCV loaded successfully: {}", libName);
+        } catch (UnsatisfiedLinkError e) {
+            log.error("Failed to load OpenCV. Trying fallback...", e);
+            System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        }
+    }
 
-                //Logic save in db or check it and Get count of silhouette
-                if(bufferedImage != null){
-                    countSilhouette = getUploadedImage(photo, bufferedImage);
-                }
+    public int getSilhouette(MultipartFile file, Photo photo) {
+        if (file == null || file.isEmpty()) return 0;
+
+        try {
+            byte[] fileBytes = file.getBytes();
+
+            String identityCode = generateFileHash(fileBytes);
+            photo.setIndentitycode(identityCode);
+
+            Photo originPhoto = repository.getByModel(photo);
+            if (originPhoto != null) {
+                return originPhoto.getCountsilhouette();
             }
 
-            return countSilhouette;
 
-        } catch (IOException ex) {
-            System.out.println("Ops... " + ex);
+            MatOfByte mob = new MatOfByte(fileBytes);
+            Mat originalImage = Imgcodecs.imdecode(mob, Imgcodecs.IMREAD_COLOR);
+            mob.release();
+
+            if (originalImage.empty()) {
+                log.warn("Failed to decode image");
+                return 0;
+            }
+
+            int count = countObjectsAdvanced(originalImage);
+
+            originalImage.release();
+
+            photo.setCountsilhouette(count);
+            repository.Add(photo);
+
+            return count;
+
+        } catch (IOException e) {
+            log.error("Error reading file", e);
             return 0;
         }
     }
 
-    private int findSilhouette(BufferedImage sourse) {
-        // Finding the background color
-        Color backgroundColor = findMostPopularColor(sourse);
 
-        Mat image = bufferedImageToMat(sourse);
+    private int countObjectsAdvanced(Mat src) {
+        List<Mat> garbageCollector = new ArrayList<>();
 
-        // Converting the image to grayscale
-        Mat grayscale = new Mat();
-        Imgproc.cvtColor(image, grayscale, Imgproc.COLOR_BGR2GRAY);
+        try {
+            Mat resized = new Mat();
+            garbageCollector.add(resized);
 
-        // Blur to smooth out an image
-        Mat blurred = new Mat();
-        Imgproc.GaussianBlur(grayscale, blurred, new Size(5, 5), 0);
+            double scale = 1.0;
+            if (src.cols() > MAX_WIDTH) {
+                scale = MAX_WIDTH / src.cols();
+                Imgproc.resize(src, resized, new Size(src.cols() * scale, src.rows() * scale));
+            } else {
+                src.copyTo(resized);
+            }
 
-        // Creating a binary image based on color distance
-        Mat binaryImage = new Mat(blurred.size(), CvType.CV_8UC1);
-        double threshold = 50.0; // Set a threshold for color comparison
+            Mat gray = new Mat();
+            garbageCollector.add(gray);
+            Imgproc.cvtColor(resized, gray, Imgproc.COLOR_BGR2GRAY);
 
-        for (int y = 0; y < grayscale.rows(); y++) {
-            for (int x = 0; x < grayscale.cols(); x++) {
-                Color pixelColor = new Color(sourse.getRGB(x, y));
-                double distance = colorDistance(pixelColor, backgroundColor);
-                if (distance < threshold) {
-                    binaryImage.put(y, x, 0); // BG - black
-                } else {
-                    binaryImage.put(y, x, 255); // Objects - white
+            //  Gaussian Blur
+            Mat blurred = new Mat();
+            garbageCollector.add(blurred);
+            Imgproc.GaussianBlur(gray, blurred, new Size(5, 5), 0);
+
+            //  Canny Edge Detection
+            Mat edges = new Mat();
+            garbageCollector.add(edges);
+            Imgproc.Canny(blurred, edges, CANNY_THRESHOLD_1, CANNY_THRESHOLD_2);
+
+            //  Morphological Closing
+            Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+            garbageCollector.add(kernel);
+
+            Mat closed = new Mat();
+            garbageCollector.add(closed);
+            Imgproc.morphologyEx(edges, closed, Imgproc.MORPH_CLOSE, kernel);
+
+            List<MatOfPoint> contours = new ArrayList<>();
+            Mat hierarchy = new Mat();
+            garbageCollector.add(hierarchy);
+
+            Imgproc.findContours(closed, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+            int objectCount = 0;
+            double imageArea = resized.cols() * resized.rows();
+            double minArea = imageArea * MIN_CONTOUR_AREA_PERCENT;
+
+
+            for (MatOfPoint contour : contours) {
+                double area = Imgproc.contourArea(contour);
+
+                if (area < minArea) {
+                    continue;
                 }
+
+                Rect rect = Imgproc.boundingRect(contour);
+                double aspectRatio = (double) rect.width / rect.height;
+
+                if (aspectRatio > 10 || aspectRatio < 0.1) {
+                     continue;
+                }
+
+                objectCount++;
+                contour.release();
+            }
+
+            log.info("Found {} objects (after filtering)", objectCount);
+            return objectCount;
+
+        } catch (Exception e) {
+            log.error("CV pipeline failed", e);
+            return 0;
+        } finally {
+            for (Mat mat : garbageCollector) {
+                if (mat != null) mat.release();
             }
         }
+    }
 
-        // Morphological operations for image enhancement
-        Mat dilated = new Mat();
-        Mat eroded = new Mat();
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5, 5));
-        Imgproc.dilate(binaryImage, dilated, kernel);
-        Imgproc.erode(dilated, eroded, kernel);
-
-        // Search for contours
-        List<MatOfPoint> contours = new ArrayList<>();
-        Imgproc.findContours(eroded, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-        // Filtering contours by area
-        double minContourArea = 100.0;
-        List<MatOfPoint> filteredContours = new ArrayList<>();
-        for (MatOfPoint contour : contours) {
-            if (Imgproc.contourArea(contour) > minContourArea) {
-                filteredContours.add(contour);
+    private String generateFileHash(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(data);
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
             }
-        }
-
-        // Saving an image with outlines for debugging
-        Imgcodecs.imwrite("output_images/contours.png", eroded);
-
-        // Count silhouette
-        int silhouetteCount = filteredContours.size();
-        System.out.println("Count silhouette: " + silhouetteCount);
-
-        return silhouetteCount;
-    }
-
-    /** Method for calculating Euclidean distance between colors */
-    private double colorDistance(Color c1, Color c2) {
-        return Math.sqrt(Math.pow(c1.getRed() - c2.getRed(), 2) +
-                Math.pow(c1.getGreen() - c2.getGreen(), 2) +
-                Math.pow(c1.getBlue() - c2.getBlue(), 2));
-    }
-
-
-    /**
-     * Method for saving entity into db or get this entity from db
-     * @param photo object for loading into db
-     */
-    private int getUploadedImage(Photo photo, BufferedImage image) {
-
-        photo.setIndentitycode(imageIdentityCode(image, photo));//set identity code
-
-        Photo originPhoto = repository.getByModel(photo);
-        if (originPhoto != null) {
-            System.out.println("Image was found");
-            return originPhoto.getCountsilhouette();
-        } else {
-            photo.setCountsilhouette(findSilhouette(image));
-            repository.Add(photo);
-            return photo.getCountsilhouette();
+            return hexString.toString();
+        } catch (Exception e) {
+            throw new RuntimeException("Hash error", e);
         }
     }
-
-
-    /**
-     * Method for finding bg color from image
-     *
-     * @param image - where finding bg color
-     * @return - most popular color in bg
-     */
-    private Color findMostPopularColor(BufferedImage image) {
-
-        Map<Color, Integer> countColor = new HashMap<>();
-
-        for (int x = 0; x < image.getWidth(); x++) {
-
-            //Top edge
-            Color topEdgeColor = new Color(image.getRGB(x, 0));
-            countColor.put(topEdgeColor, countColor.getOrDefault(topEdgeColor, 0) + 1);
-
-            //Bottom edge
-            Color bottomEdgeColor = new Color(image.getRGB(x, image.getHeight() - 1));
-            countColor.put(bottomEdgeColor, countColor.getOrDefault(bottomEdgeColor, 0) + 1);
-        }
-
-        for (int y = 0; y < image.getHeight(); y++) {
-
-            //left edge
-            Color leftEdgeColor = new Color(image.getRGB(0, y));
-            countColor.put(leftEdgeColor, countColor.getOrDefault(leftEdgeColor, 0) + 1);
-
-            //Right edge
-            Color rightEdgeColor = new Color(image.getRGB(image.getWidth() - 1, y));
-            countColor.put(rightEdgeColor, countColor.getOrDefault(rightEdgeColor, 0) + 1);
-        }
-
-        Color backgroundColor = null;
-        int maxCount = 0;
-
-        for (Map.Entry<Color, Integer> entry : countColor.entrySet()) {
-            if (entry.getValue() > maxCount) {
-                backgroundColor = entry.getKey();
-                maxCount = entry.getValue();
-            }
-        }
-
-        return backgroundColor;
-    }
-
-    private Mat bufferedImageToMat(BufferedImage bi) {
-        Mat mat = new Mat(bi.getHeight(), bi.getWidth(), CvType.CV_8UC3);
-        byte[] data = ((DataBufferByte) bi.getRaster().getDataBuffer()).getData();
-        mat.put(0, 0, data);
-        return mat;
-    }
-
-
-    /**
-     * Get rgb colors from int pixel
-     *
-     * @param pixel pixel
-     * @return array with rgb colors first red, second green, third blue
-     */
-    private int[] getRGB(int pixel) {
-
-        int[] rgb = new int[3];// first red, second green, last blue
-
-        rgb[0] = (pixel >> 16) & 0xff;//red
-        rgb[1] = (pixel >> 8) & 0xff;//green
-        rgb[2] = pixel & 0xff;//blue
-
-        return rgb;
-    }
-
-    /**
-     * Method generate identity code for entity on db
-     *
-     * @param image image for generate code
-     * @return integer code
-     */
-    private String imageIdentityCode(BufferedImage image, Photo photo) {
-
-
-        StringBuilder code = new StringBuilder();
-
-        for (int i = 0; i < image.getWidth(); i++) {
-
-            int[] rgb = getRGB(image.getRGB(i, 0));
-
-            int numCode = rgb[0] + rgb[1] + rgb[2];
-
-            if (code.length() > 45) {
-                code.delete(0, 20);
-            }
-            code.append(numCode);
-        }
-
-        String sha256Hex = DigestUtils.sha256Hex(photo.getFilename());
-
-        code.append(sha256Hex);
-        code.delete(0, 15).delete(55, 75);
-
-        return code.toString();
-    }
-
 }

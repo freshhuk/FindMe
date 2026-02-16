@@ -29,18 +29,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                // Some sort of CORS disabling (allowing requests from all domains)
+        http
                 .csrf(AbstractHttpConfigurer::disable)
-                // Configuring access to endpoints
+                .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/auth/sign-up").permitAll()
-                        .requestMatchers("/auth/sign-in").permitAll()
-                        .requestMatchers("/api/**").authenticated()//end points with auth
-                .anyRequest().authenticated())
-                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
         return http.build();
     }
 
